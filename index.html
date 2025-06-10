@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Birthday Countdown</title>
+<style>
+  @font-face {
+    font-family: 'DS-Digital';
+    src: url('https://fonts.cdnfonts.com/s/47015/DS-DIGI.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  /* Reset */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: black;
+    color: white;
+    font-family: 'DS-Digital', monospace, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+      "Helvetica Neue", Arial, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    padding-bottom: 150px; /* for scroll */
+    overflow-y: auto;
+  }
+
+  #countdown {
+    font-size: 5rem;
+    color: #fff;
+    letter-spacing: 0;
+    text-shadow:
+      0 0 4px rgba(255, 255, 255, 0.7),
+      0 0 8px rgba(255, 255, 255, 0.4);
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .time-unit {
+    user-select: none;
+  }
+
+  .digit {
+    display: inline-block;
+    min-width: 1ch;
+    font-variant-numeric: tabular-nums;
+    transition: opacity 0.3s ease-in-out;
+    opacity: 1;
+  }
+
+  .digit.fade-out {
+    opacity: 0;
+  }
+
+  #birthdayMessage {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", Arial,
+      sans-serif;
+    color: #ccc;
+    font-size: 1.25rem;
+    text-align: center;
+    margin-top: 1.5rem;
+    max-width: 600px;
+    padding: 0 1rem;
+    line-height: 1.4;
+    user-select: none;
+  }
+
+  /* Liquid Glass Mute Button */
+  #muteBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+    box-shadow:
+      0 4px 30px rgba(255, 255, 255, 0.1);
+    transition: background 0.3s ease, color 0.3s ease;
+    user-select: none;
+    z-index: 1000;
+  }
+
+  #muteBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ddd;
+    box-shadow:
+      0 6px 40px rgba(255, 255, 255, 0.2);
+  }
+
+  #muteBtn:focus {
+    outline: none;
+    box-shadow:
+      0 0 0 3px rgba(255, 255, 255, 0.6);
+  }
+</style>
+</head>
+<body>
+  <div id="countdown">
+    <span class="time-unit" id="months"><span class="digit">0</span> months, </span>
+    <span class="time-unit" id="days"><span class="digit">0</span> days, </span>
+    <span class="time-unit" id="hours"><span class="digit">0</span> hours, </span>
+    <span class="time-unit" id="minutes"><span class="digit">0</span> minutes, </span>
+    <span class="time-unit" id="seconds"><span class="digit">0</span> seconds</span>
+  </div>
+
+  <p id="birthdayMessage">
+    Until my 13th birthday, lots of fun with my family, and Nintendo Switch 2 (maybe)
+  </p>
+
+  <button id="muteBtn" aria-label="Mute ticking sound">🔊</button>
+
+  <audio id="tickSound" src="tick.mp3" preload="auto" loop></audio>
+
+<script>
+  const targetDate = new Date("2025-08-24T00:00:00");
+
+  const units = ["months", "days", "hours", "minutes", "seconds"];
+  const elements = units.reduce((acc, unit) => {
+    acc[unit] = document.querySelector(`#${unit} .digit`);
+    return acc;
+  }, {});
+
+  const tickSound = document.getElementById("tickSound");
+  const muteBtn = document.getElementById("muteBtn");
+
+  tickSound.volume = 0.4;
+  tickSound.play().catch(() => {});
+
+  // Calculate time difference in units
+  function formatTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const months = Math.floor(totalSeconds / (30 * 24 * 3600));
+    let remainder = totalSeconds % (30 * 24 * 3600);
+
+    const days = Math.floor(remainder / (24 * 3600));
+    remainder %= 24 * 3600;
+
+    const hours = Math.floor(remainder / 3600);
+    remainder %= 3600;
+
+    const minutes = Math.floor(remainder / 60);
+    const seconds = remainder % 60;
+
+    return { months, days, hours, minutes, seconds };
+  }
+
+  // Animate digit update with fade
+  function updateDigit(unit, newValue) {
+    const el = elements[unit];
+    if (!el) return;
+    if (el.textContent === String(newValue)) return; // no change
+
+    el.classList.add("fade-out");
+    setTimeout(() => {
+      el.textContent = newValue;
+      el.classList.remove("fade-out");
+    }, 300);
+  }
+
+  function updateCountdown() {
+    const now = new Date();
+    const diff = targetDate - now;
+
+    if (diff <= 0) {
+      document.getElementById("countdown").textContent = "Happy Birthday! 🎉";
+      tickSound.pause();
+      return;
+    }
+
+    const { months, days, hours, minutes, seconds } = formatTime(diff);
+
+    updateDigit("months", months);
+    updateDigit("days", days);
+    updateDigit("hours", hours);
+    updateDigit("minutes", minutes);
+    updateDigit("seconds", seconds);
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  function updateMuteButton() {
+    if (tickSound.muted || tickSound.paused) {
+      muteBtn.textContent = "🔇";
+      muteBtn.setAttribute("aria-label", "Unmute ticking sound");
+    } else {
+      muteBtn.textContent = "🔊";
+      muteBtn.setAttribute("aria-label", "Mute ticking sound");
+    }
+  }
+
+  muteBtn.addEventListener("click", () => {
+    if (tickSound.muted || tickSound.paused) {
+      tickSound.muted = false;
+      tickSound.play().catch(() => {});
+    } else {
+      tickSound.muted = true;
+      tickSound.pause();
+    }
+    updateMuteButton();
+  });
+
+  updateMuteButton();
+</script>
+</body>
+</html>
