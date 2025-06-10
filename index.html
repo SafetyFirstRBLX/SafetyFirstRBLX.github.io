@@ -35,7 +35,7 @@
   }
 
   #countdown {
-    font-size: clamp(2rem, 8vw, 5rem);
+    font-size: 2.5rem;  /* WAY smaller */
     max-width: 95vw;
     overflow-wrap: break-word;
     color: #fff;
@@ -45,10 +45,6 @@
       0 0 8px rgba(255, 255, 255, 0.4);
     user-select: none;
     white-space: nowrap;
-  }
-
-  .time-unit {
-    user-select: none;
   }
 
   .digit {
@@ -68,7 +64,7 @@
       Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", Arial,
       sans-serif;
     color: #ccc;
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     text-align: center;
     margin-top: 1.5rem;
     max-width: 600px;
@@ -77,7 +73,6 @@
     user-select: none;
   }
 
-  /* Liquid Glass Mute Button */
   #muteBtn {
     position: fixed;
     bottom: 20px;
@@ -115,6 +110,7 @@
     #countdown {
       letter-spacing: -0.02em;
       white-space: normal;
+      font-size: 2rem; /* even smaller on small screens */
     }
   }
 </style>
@@ -151,7 +147,6 @@
   tickSound.volume = 0.4;
   tickSound.play().catch(() => {});
 
-  // Calculate time difference in units
   function formatTime(ms) {
     const totalSeconds = Math.floor(ms / 1000);
     const months = Math.floor(totalSeconds / (30 * 24 * 3600));
@@ -169,11 +164,10 @@
     return { months, days, hours, minutes, seconds };
   }
 
-  // Animate digit update with fade on changed digits only
   function updateDigit(unit, newValue) {
     const el = elements[unit];
     if (!el) return;
-    if (el.textContent === String(newValue)) return; // no change
+    if (el.textContent === String(newValue)) return;
 
     el.classList.add("fade-out");
     setTimeout(() => {
